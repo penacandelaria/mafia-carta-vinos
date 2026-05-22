@@ -11,7 +11,6 @@ function el(tag, cls, text){
 }
 
 function parseCSV(text){
-  // Parser simple con soporte de comillas
   var rows = [];
   var row = [];
   var cur = "";
@@ -80,7 +79,6 @@ function render(sections){
 
     var section = el("section", "section");
 
-    // Header de sección: categoría + aclaración de precios
     var header = el("div", "section__header");
     header.appendChild(el("h2", "section__title", sec.categoria));
     header.appendChild(el("div", "section__prices", "BOTELLA  |  COPA"));
@@ -119,13 +117,11 @@ function main(){
         throw new Error("CSV vacío o inválido");
       }
 
-      // Headers
       var headers = [];
       for (var h = 0; h < rows[0].length; h++){
         headers.push(norm(rows[0][h]));
       }
 
-      // Data
       var data = [];
       for (var r = 1; r < rows.length; r++){
         var rr = rows[r];
@@ -148,7 +144,6 @@ function main(){
         data.push(obj);
       }
 
-      // Filtrar disponibles
       var visibles = [];
       for (var j = 0; j < data.length; j++){
         if (norm(data[j]["Disponible"]).toUpperCase() !== "NO"){
@@ -156,18 +151,21 @@ function main(){
         }
       }
 
-      // Ordenar por categoría + orden
+      // Mantener el orden exacto de la planilla.
+      // Solo ordena dentro de una misma categoría si existe la columna "Orden".
       visibles.sort(function(a, b){
         var ca = norm(a["Categoría"]);
         var cb = norm(b["Categoría"]);
-        if (ca !== cb) return ca.localeCompare(cb, "es");
 
-        var oa = Number(norm(a["Orden"]) || 9999);
-        var ob = Number(norm(b["Orden"]) || 9999);
-        return oa - ob;
+        if (ca === cb){
+          var oa = Number(norm(a["Orden"]) || 9999);
+          var ob = Number(norm(b["Orden"]) || 9999);
+          return oa - ob;
+        }
+
+        return 0;
       });
 
-      // Agrupar por categoría
       var cats = [];
       var catItems = {};
 
@@ -181,8 +179,7 @@ function main(){
         }
 
         var subParts = [];
-        if (v["Productor"]) subParts.push(norm(v["Productor"]));
-        if (v["Región"]) subParts.push(norm(v["Región"]));
+        if (v["Bodega"]) subParts.push(norm(v["Bodega"]));
         if (v["Uva"]) subParts.push(norm(v["Uva"]));
         if (v["Cosecha"]) subParts.push(norm(v["Cosecha"]));
 
@@ -201,7 +198,6 @@ function main(){
         });
       }
 
-      // Sections
       var sections = [];
       for (var ci = 0; ci < cats.length; ci++){
         sections.push({
